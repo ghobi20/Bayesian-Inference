@@ -1,0 +1,11 @@
+---
+title: "Estimador de lamda en datos Gamma con a priori Gamma"
+author: "Sofia Gamino Estrada"
+date: "October 19, 2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+

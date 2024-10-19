@@ -1,0 +1,70 @@
+---
+title: "Bioinformática y Estadística I. Tarea 4"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+1. Sea $X$ una variable aleatoria Gamma de parámetro de forma $\alpha$ conocido y parámetro de tasa $\lambda$ desconocido, con función de densidad
+$$ f_{X|\Lambda} (x|\lambda) = \begin{cases}
+\frac{ \lambda ^ \alpha}{\Gamma(\alpha)} x^{\alpha-1} e^{-x \lambda}, & x>0;\\
+0, & \text{otro caso}.
+\end{cases}
+$$
+Encuentre la distribución posterior de $\Lambda$ suponiendo que se tiene una muestra de tamaño $n$ y que, a priori, $\Lambda$ sigue una distribución Gamma$(a, b)$. Luego, la función de densidad a priori es:
+$$ f_{\Lambda}(\lambda) = \begin{cases}
+\frac{ b ^ a}{\Gamma(a)} \lambda^{a-1} e^{-b\lambda}, & x>0;\\
+0, & \text{otro caso}.
+\end{cases}
+$$
+
+
+2. Suponga que se tiene una muestra aleatoria de tamaño $n$ de una variable aleatoria Geométrica$(\theta)$. Encuentre la distribución posterior de $\Theta$ considerando que, a priori, $\Theta$ sigue una distribución Beta$(a, b)$. Recuerde que la variable $X$ cuenta el número de fallas hasta el primer éxito, por lo que la función de probabilidad es:
+$$ f_{X|\Theta}(x|\theta) = \begin{cases}
+\theta(1-\theta)^x, & x=0,1,2,...;\\
+0 & \text{otro caso}.
+\end{cases}
+$$
+
+
+
+
+
+2. Sea $X$ una variable aleatoria Binomial Negativa de parámetros $r$ y $\theta$. Encontrar la distribución a posteriori de $\Theta$ suponiendo que se tiene una muestra de tamaño $n$ y que, a priori, $\Theta$ sigue una distribución Beta$(a,b)$. Recuerde que la varaible $X$ cuenta el número de fallas hasta obtener $r$ éxitos, por lo que la función de probabilidad está dada por:
+$$ f_{X|\Theta}(x|\theta) = \begin{cases}
+{x+r-1 \choose x} \theta^r(1-\theta)^x, & x=0,1,2,...;\\
+0 & \text{otro caso}.
+\end{cases}
+$$
+
+3. Se desea estimar el parámetro $\lambda$ de una distribución Poisson a partir de una muestra de tamaño $n$. Encuentre la distribución posterior de $\Lambda$ suponiendo que, a priori, $\Lambda\sim \text{Gamma}(\alpha, \beta)$, donde $\alpha$ es parámetro de forma y $\beta$ es parámetro de tasa. Recuerde la función de probabilidad Poisson está dada por:
+$$ f_{X|\Lambda}(x|\lambda) = \begin{cases}
+\frac{\lambda^x e^{-\lambda}}{x!}, & x=0,1,2,...;\\
+0 & \text{otro caso}.
+\end{cases}
+$$
+4. Sea $X$ una variable aleatoria Normal con media conocida $\mu$ y precisión $\tau$ desconocida, cuya función de densidad está dada por
+$$ f_{X|T}(x|\tau) = \sqrt{\frac{\tau}{2\pi}}\exp\left\{-\frac{\tau}{2} (x-\mu)^2 \right\}.
+$$
+Note que la precisión es igual a $\sigma^{-2}$, lo cual implica que, a mayor varianza, menor precisión, y a mayor precisión, menor varianza, puesto que uno es el inverso del otro. Encuentre la función de densidad a posteriori de $T$ a partir de una muestra de tamaño $n$, bajo el supuesto de que $T$ sigue una distribución a priori Gamma$(\alpha, \beta)$, donde $\alpha$ es parámetro de forma y $\beta$ es parámetro de tasa.
+
+
+
+6. Sea $X$ una variable aleatoria Exponencial con parámetro de tasa $\lambda$ y con función de densidad:
+$$ f_{X|\Lambda} (x|\lambda) = \begin{cases}
+\lambda e^{-\lambda x }, & x>0;\\
+0, & \text{otro caso}.
+\end{cases}
+$$
+Encuentre la función de densidad a posteriori de $\Lambda$ a partir de una muestra de tamaño $n$, bajo el supuesto de que $\Lambda$ sigue una distribución a priori Gamma$(\alpha, \beta)$, donde $\alpha$ es parámetro de forma y $\beta$ es parámetro de tasa.
+
+
+Nota: Para cada ejercicio, además de encontrar la distribución posterior, haga lo siguiente: 
+
+a. Genere $n$ datos sintéticos.
+b. Grafique la función de densidad a priori.
+c. Grafique la función de densidad a posteriori.
+d. Grafique la función de de verosimilitud. 
+e. Sobre la gráfica de la función de verosimilitud, grafique el estimador de máxima verosimilitud y el intervalo del 95% de confianza.
+f. Sobre la gráfica de la distribución posterior, grafique la media a posteriori, la mediana a posteriori, el MAP, y un intervalo de credibilidad de 95%.
+g. Compare los resultados de ambos métodos. Juegue con el valor de $n$ y los parámetros a priori para ver sus efectos sobre la inferencia. No es necesario que redacte nada sobre este último punto.
