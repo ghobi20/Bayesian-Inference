@@ -4,8 +4,101 @@ author: "Sofia Gamino Estrada"
 date: "October 19, 2024"
 output: html_document
 ---
+---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+**Input**:
+**Output**:
+
+---
+
+# Descripción del problema
+Sea $X$ una variable aleatoria Gamma de parámetro de forma $\alpha$ conocido y parámetro de tasa $\lambda$ desconocido, con función de densidad
+$$ f_{X|\Lambda} (x|\lambda) = \begin{cases}
+\frac{ \lambda ^ \alpha}{\Gamma(\alpha)} x^{\alpha-1} e^{-x \lambda}, & x>0;\\
+0, & \text{otro caso}.
+\end{cases}
+$$
+Encuentre la distribución posterior de $\Lambda$ suponiendo que se tiene una muestra de tamaño $n$ y que, a priori, $\Lambda$ sigue una distribución Gamma$(a, b)$. Luego, la función de densidad a priori es:
+$$ f_{\Lambda}(\lambda) = \begin{cases}
+\frac{ b ^ a}{\Gamma(a)} \lambda^{a-1} e^{-b\lambda}, & x>0;\\
+0, & \text{otro caso}.
+\end{cases}
+$$
+
+# Distribución Conjugada
+
+## Hallar los kernel
+
+Primero tenemos que hallar el kernel de $f_{X|\Lambda} (x|\lambda)$ y de $f_{\Lambda}(\lambda)$
+
+### Kernel de $f_{X|\Lambda} (x|\lambda)$
+
+$$f_{X|\Lambda} (x|\lambda) = \frac{1}{\Gamma(\alpha)}\lambda^{\alpha}x^{\alpha-1}e^{-x\lambda}
+$$
+$$f_{X|\Lambda} (x|\lambda) \propto \lambda^{\alpha}e^{-x\lambda}
+$$
+$$L(\lambda) = \prod^n_{i=1}(f_{X|\Lambda} (x|\lambda)) = \prod^n_{i=1}\lambda^{\alpha}e^{-x\lambda}
+$$
+$$L(\lambda) = \lambda^{n\alpha}e^{-s\lambda}, s = \sum^n_{i=1}x_i
+$$
+
+### Kernel de $f_{\Lambda}(\lambda)$
+
+$$f_{\Lambda}(\lambda) = \frac{ b ^ a}{\Gamma(a)} \lambda^{a-1} e^{-b\lambda}
+$$
+$$f_{\Lambda}(\lambda) \propto \lambda^{\alpha-1}e^{-b\lambda}
+$$
+
+## Distribución Conjugada a posteriori
+Ya que tenemos los kernel, podemos sacar la distribución conjugada a posteriori. En este caso, ignoraremos la constante de normalización $\int¹_{0}L(\lambda)f_{\Lambda}(\lambda)d\lambda$ en el denominador.
+
+$$(\lambda|x_1, ..., x_n) = L(\lambda)f_{\Lambda}(\lambda)
+$$
+
+$$(\lambda|x_1, ..., x_n) = \lambda^{n\alpha}e^{-s\lambda}\lambda^{\alpha-1}e^{-b\lambda}
+$$
+
+$$(\lambda|x_1, ..., x_n) = \lambda^{na+a-1}e^{-s\lambda-b\lambda}
+$$
+
+$$(\lambda|x_1, ..., x_n) = \lambda^{a^*-1}e^{-b^*\lambda}, a^*=na+a,\space b^*=s+b
+$$
+
+
+# Código de estimador bayesiano
+
+## Creación de datos de prueba
+Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor real de $\lambda$ a partir de una distribución Gamma.
+
+```{r}
+alpha = 3
+lambda = 4
+n = 20
+set.seed(1010)
+x = rgamma(n, rate = lambda, shape = alpha)
+
+```
+
+
+## A priori Gamma no informativa de lambda
+
+```{r}
+a = 1/10
+b = 1
+p_seq = seq(0, 10, .01)
+frango_l = dgamma(p_seq, rate = b, shape = a)
+plot(p_seq, frango_l, col="magenta", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a priori Gamma para lambda")
+```
+
+## A posteriori Gamma de lambda
+
+```{r}
+a_p = n*a + a
+b_p = sum(x) + b
+l_MV = (alpha*n)/sum(x)
+grango_l = dgamma(p_seq, rate = b_p, shape = a_p)
+plot(p_seq, grango_l, col="dodgerblue", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a posteriori Gamma para lambda")
+abline(v = l_MV, lwd = 2, col = "purple", lty = 5)
+
 ```
 
