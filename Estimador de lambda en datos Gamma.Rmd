@@ -6,8 +6,21 @@ output: html_document
 ---
 ---
 
+En este código se puede dar una densidad de posibles valores para un parámetro lambda desconocido en un intervalo de confianza a partir de alpha conocido por medio de inferencia Bayesiana
+
 **Input**:
-**Output**:
+- alpha
+- lambda: Para poder comparar el desempeño del modelo y definir los datos de prueba 
+- a: Parametro de forma a priori
+- b: Parámetro de tasa a priori
+- p_range: Una secuencia de posibles valores para lambda. Se va a operar sobre esta
+
+**Output**: 
+- Distribución a priori
+- Distribución a posteriori
+- Estimadores a posteriori: MAP, Media, Mediana
+- Intervalo de credibilidad de lambda del 95%: Son los posibles valores de lambda
+- Distribución de Verosimilitud, así como MV y intervalo de confianza: Para comparación con el método Bayesiano
 
 ---
 
@@ -101,7 +114,7 @@ Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor r
 rm(list = ls())
 alpha = 2
 lambda = 5
-n = 20
+n = 30
 set.seed(1010)
 x = rgamma(n, rate = lambda, shape = alpha)
 
@@ -111,8 +124,8 @@ x = rgamma(n, rate = lambda, shape = alpha)
 ## A priori Gamma no informativa de lambda
 
 ```{r}
-a =0.001
-b =0.001
+a =10
+b =1/10
 p_range = seq(0, 15, .01)
 priori_l = dgamma(p_range, rate = b, shape = a)
 plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a priori Gamma para lambda")
