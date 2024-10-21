@@ -64,6 +64,33 @@ $$
 $$(\lambda|x_1, ..., x_n) = \lambda^{a^*-1}e^{-b^*\lambda}, a^*=n\alpha+a,\space b^*=s+b
 $$
 
+## Estimación de MAP
+
+Podemos hallar MAP de lambda a partir de encontrar cuando la distribución conjugada es 0. Se hace ln(L($\lambda$)), después se deriva $\lambda$ y finalmente igualamos a 0.
+
+$$l(\lambda) = ln[\lambda^{a^*-1}e^{-b^*\lambda}]
+$$
+
+$$l(\lambda) = ln(\lambda^{a^{*}-1})+ln(e^{-b^{*}\lambda})
+$$
+
+$$l(\lambda) = a^{*}-1ln(\lambda)-b^{*}\lambda
+$$
+
+$$\frac{\partial l(\lambda)}{\partial \lambda} = \frac{\partial}{\partial\lambda}[a^{*}-1ln(\lambda)-b^{*}\lambda]
+$$
+
+$$ = \frac{a^{*}-1}{\lambda}-b^{*}
+$$
+
+$$ \frac{a^{*}-1}{\lambda}-b^{*} = 0
+$$ 
+
+$$a^{*}-1 = b^{*}\lambda
+$$
+
+$$\lambda^{-}_{MAP} =\frac{a^{*}-1}{b^{*}}
+$$
 
 # Código de estimador bayesiano
 
@@ -73,8 +100,8 @@ Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor r
 ```{r}
 rm(list = ls())
 alpha = 2
-lambda = 3
-n = 10
+lambda = 5
+n = 20
 set.seed(1010)
 x = rgamma(n, rate = lambda, shape = alpha)
 
@@ -86,7 +113,7 @@ x = rgamma(n, rate = lambda, shape = alpha)
 ```{r}
 a =0.001
 b =0.001
-p_range = seq(0, 10, .01)
+p_range = seq(0, 15, .01)
 priori_l = dgamma(p_range, rate = b, shape = a)
 plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a priori Gamma para lambda")
 ```
@@ -96,25 +123,61 @@ plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "lambda", ylab
 ```{r}
 a_p = n*alpha + a
 b_p = sum(x) + b
+
 post_l = dgamma(p_range, rate = b_p, shape = a_p)
-plot(p_range, post_l, col="dodgerblue", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a posteriori Gamma para lambda")
+
+plot(p_range, post_l, col="dodgerblue", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a Posteriori vs a Priori")
+lines(p_range, priori_l, col="magenta", type ="l", lwd = 2)
+
+IC_cred = qgamma(c(0.025, 0.975), shape = a_p, rate = b_p)
+
+MAP = (a_p-1)/b_p
+Mean = a_p/b_p
+Median = qgamma(0.5, shape = a_p, rate = b_p)
+
+abline(v = MAP, lwd = 2, col = "darkmagenta", lty = 4)
+abline(v = Mean, lwd = 2, col = "blue4", lty = 4)
+abline(v = Median, lwd = 2, col = "green", lty = 4)
+abline(v = IC_cred[1], lwd = 2, col = "red", lty = 5)
+abline(v = IC_cred[2], lwd = 2, col = "red", lty = 6)
+abline(v = lambda, lwd = 2, col = "black", lty = 1)
+legend("topright", c("MAP", "Mean", "Median", "IC_cred_lower", "IC_cred_upper", "Real value"), lty = c(4, 4, 4, 5, 6, 1), col = c("darkmagenta", "blue4", "green", "red", "red", "black"))
+
+
+cat("MAP = ", MAP, "\n")
+cat("Mean = ", Mean, "\n")
+cat("Median = ", Median, "\n")
+cat("Intervalo de credibilidad = ", IC_cred, "\n")
+cat("Valor Real = ", lambda, "\n")
 
 ```
 
 ## Función de Verosimilitud
 
 ```{r}
+
 verosim_v = c()
-for (l in post_l) {
+for (l in p_range) {
   verosim = (l^{n*alpha})*(exp(-sum(x)*l))
   verosim_v = append(verosim_v, verosim)
 }
 
 MV = (alpha*n)/sum(x)
 
-plot(p_range, verosim_v, col="purple", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Gráfica de verosimilitud con valores de lambda a posteriori")
+threshold = MV * exp(-qchisq(0.95, df = 1) / 2)
+
+IC_lower = min(p_range[verosim_v >= threshold])
+IC_upper = max(p_range[verosim_v >= threshold])
+
+plot(p_range, verosim_v, col="purple", type ="l", lwd = 2, xlab = "lambda", ylab = "L(lambda)", main = "Gráfica de verosimilitud")
 abline(v = MV, lwd = 2, col = "gold", lty = 4)
+abline(v = IC_lower , lwd = 2, col = "blue4", lty = 4)
+abline(v = IC_upper, lwd = 2, col = "blue4", lty = 4)
+abline(v = lambda, lwd = 2, col = "black", lty = 1)
+legend("topright", c("MV", "Int_conf", "Valor Real"), lty = c(4, 4, 1), col = c("gold", "blue4", "black"))
 
 
+cat("MV = ", MV, "\n")
+cat("Confidence Interval = ", IC_lower, ",", IC_upper)
 ```
 
