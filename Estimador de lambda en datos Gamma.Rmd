@@ -46,7 +46,7 @@ $$
 
 $$f_{\Lambda}(\lambda) = \frac{ b ^ a}{\Gamma(a)} \lambda^{a-1} e^{-b\lambda}
 $$
-$$f_{\Lambda}(\lambda) \propto \lambda^{\alpha-1}e^{-b\lambda}
+$$f_{\Lambda}(\lambda) \propto \lambda^{a-1}e^{-b\lambda}
 $$
 
 ## Distribución Conjugada a posteriori
@@ -55,13 +55,13 @@ Ya que tenemos los kernel, podemos sacar la distribución conjugada a posteriori
 $$(\lambda|x_1, ..., x_n) = L(\lambda)f_{\Lambda}(\lambda)
 $$
 
-$$(\lambda|x_1, ..., x_n) = \lambda^{n\alpha}e^{-s\lambda}\lambda^{\alpha-1}e^{-b\lambda}
+$$(\lambda|x_1, ..., x_n) = \lambda^{n\alpha}e^{-s\lambda}\lambda^{a-1}e^{-b\lambda}
 $$
 
-$$(\lambda|x_1, ..., x_n) = \lambda^{na+a-1}e^{-s\lambda-b\lambda}
+$$(\lambda|x_1, ..., x_n) = \lambda^{n\alpha+a-1}e^{-s\lambda-b\lambda}
 $$
 
-$$(\lambda|x_1, ..., x_n) = \lambda^{a^*-1}e^{-b^*\lambda}, a^*=na+a,\space b^*=s+b
+$$(\lambda|x_1, ..., x_n) = \lambda^{a^*-1}e^{-b^*\lambda}, a^*=n\alpha+a,\space b^*=s+b
 $$
 
 
@@ -71,9 +71,10 @@ $$
 Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor real de $\lambda$ a partir de una distribución Gamma.
 
 ```{r}
-alpha = 3
-lambda = 4
-n = 20
+rm(list = ls())
+alpha = 2
+lambda = 3
+n = 10
 set.seed(1010)
 x = rgamma(n, rate = lambda, shape = alpha)
 
@@ -83,22 +84,37 @@ x = rgamma(n, rate = lambda, shape = alpha)
 ## A priori Gamma no informativa de lambda
 
 ```{r}
-a = 1/10
-b = 1
-p_seq = seq(0, 10, .01)
-frango_l = dgamma(p_seq, rate = b, shape = a)
-plot(p_seq, frango_l, col="magenta", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a priori Gamma para lambda")
+a =0.001
+b =0.001
+p_range = seq(0, 10, .01)
+priori_l = dgamma(p_range, rate = b, shape = a)
+plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a priori Gamma para lambda")
 ```
 
 ## A posteriori Gamma de lambda
 
 ```{r}
-a_p = n*a + a
+a_p = n*alpha + a
 b_p = sum(x) + b
-l_MV = (alpha*n)/sum(x)
-grango_l = dgamma(p_seq, rate = b_p, shape = a_p)
-plot(p_seq, grango_l, col="dodgerblue", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a posteriori Gamma para lambda")
-abline(v = l_MV, lwd = 2, col = "purple", lty = 5)
+post_l = dgamma(p_range, rate = b_p, shape = a_p)
+plot(p_range, post_l, col="dodgerblue", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a posteriori Gamma para lambda")
+
+```
+
+## Función de Verosimilitud
+
+```{r}
+verosim_v = c()
+for (l in post_l) {
+  verosim = (l^{n*alpha})*(exp(-sum(x)*l))
+  verosim_v = append(verosim_v, verosim)
+}
+
+MV = (alpha*n)/sum(x)
+
+plot(p_range, verosim_v, col="purple", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Gráfica de verosimilitud con valores de lambda a posteriori")
+abline(v = MV, lwd = 2, col = "gold", lty = 4)
+
 
 ```
 
