@@ -1,16 +1,17 @@
 ---
-title: "Estimador de theta en datos Geometricos con a priori Beta"
+title: "Estimador de theta en datos de una Binomial Negativa con a priori Beta"
 author: "Sofia Gamino Estrada"
 date: "October 19, 2024"
 output: html_document
 ---
 ---
 
-En este código se puede dar una densidad de posibles valores para un parámetro theta desconocido de una distribución Geometrica en un intervalo de confianza a partir de n conocido por medio de inferencia Bayesiana
+En este código se puede dar una densidad de posibles valores para un parámetro theta desconocido de una Distribución Binomial Negativa en un intervalo de confianza a partir de r conocido por medio de inferencia Bayesiana
 
 **Input**:
 - n: Tamaño de la muestra
 - theta: Para poder comparar el desempeño del modelo y definir los datos de prueba 
+- r: La cantidad de exitos deseada
 - alpha: Uno de los parámetros de la distribución beta
 - beta: El otro parámetro de la distribución beta
 
@@ -24,9 +25,9 @@ En este código se puede dar una densidad de posibles valores para un parámetro
 ---
 
 # Descripción del problema
-2. Suponga que se tiene una muestra aleatoria de tamaño $n$ de una variable aleatoria Geométrica$(\theta)$. Encuentre la distribución posterior de $\Theta$ considerando que, a priori, $\Theta$ sigue una distribución Beta$(a, b)$. Recuerde que la variable $X$ cuenta el número de fallas hasta el primer éxito, por lo que la función de probabilidad es:
+Sea $X$ una variable aleatoria Binomial Negativa de parámetros $r$ y $\theta$. Encontrar la distribución a posteriori de $\Theta$ suponiendo que se tiene una muestra de tamaño $n$ y que, a priori, $\Theta$ sigue una distribución Beta$(a,b)$. Recuerde que la varaible $X$ cuenta el número de fallas hasta obtener $r$ éxitos, por lo que la función de probabilidad está dada por:
 $$ f_{X|\Theta}(x|\theta) = \begin{cases}
-\theta(1-\theta)^x, & x=0,1,2,...;\\
+{x+r-1 \choose x} \theta^r(1-\theta)^x, & x=0,1,2,...;\\
 0 & \text{otro caso}.
 \end{cases}
 $$
@@ -47,13 +48,17 @@ Primero tenemos que hallar el kernel de $f_{X|\Theta} (x|\theta)$ y de $f_{\thet
 ### Kernel de $f_{X|\Theta} (x|\theta)$
 
 $$f_{X|\Theta} (x|\theta) = 
-\theta(1-\theta)^x
+{x+r-1 \choose x} \theta^r(1-\theta)^x
 $$
 
-$$L(\theta) = \prod^n_{i=1}(f_{X|\Theta} (x|\theta)) = \prod^n_{i=1}\theta(1-\theta)^x
+$$f_{X|\Theta} (x|\theta) \propto
+\theta^r(1-\theta)^x
 $$
 
-$$L(\theta) = \theta^n(1-\theta)^{s}, s = \sum^n_{i=1}x_i
+$$L(\theta) = \prod^n_{i=1}(f_{X|\Theta} (x|\theta)) = \prod^n_{i=1}\theta^r(1-\theta)^x
+$$
+
+$$L(\theta) = \theta^{nr}(1-\theta)^{s}, s = \sum^n_{i=1}x_i
 $$
 
 ### Kernel de $f_{\Lambda}(\lambda)$
@@ -73,15 +78,15 @@ L(\theta)f_{\Theta}(\theta)
 $$
 
 $$(\theta|x_1, ..., x_n) = 
-\theta^n(1-\theta)^{s}\theta^{\alpha-1} (1-\theta)^{\beta-1}
+\theta^{nr}(1-\theta)^{s}\theta^{\alpha-1} (1-\theta)^{\beta-1}
 $$
 
 $$(\theta|x_1, ..., x_n) = 
-\theta^{n+\alpha-1}(1-\theta)^{s+\beta-1}\ 
+\theta^{nr+\alpha-1}(1-\theta)^{s+\beta-1}\ 
 $$
 
 $$(\theta|x_1, ..., x_n) = 
-\theta^{a^*-1}(1-\theta)^{\beta^*-1}, \space \alpha^*=n+\alpha, \space \beta^* = s+\beta
+\theta^{a^*-1}(1-\theta)^{\beta^*-1}, \space \alpha^*=nr+\alpha, \space \beta^* = s+\beta
 $$
 
 ## Estimación de MAP
@@ -126,14 +131,16 @@ $$
 # Código de estimador bayesiano
 
 ## Creación de datos de prueba
-Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor real de $\theta$ a partir de una distribución Geometrica.
+Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor real de $\theta$ a partir de una distribución Binomial Negativa.
 
 ```{r}
+
 rm(list = ls())
 theta = .76
+r = 10
 n = 20
 set.seed(1010)
-x = rgeom(n, theta)
+x = rnbinom(n, size = r, prob = theta)
 
 ```
 
@@ -151,7 +158,7 @@ plot(p_range, priori_t, col="magenta", type ="l", lwd = 2, xlab = "theta", ylab 
 ## A posteriori Beta de lambda
 
 ```{r}
-alpha_p = n + alpha
+alpha_p = (n*r) + alpha
 beta_p = sum(x) + beta
 
 post_t = dbeta(p_range, alpha_p, beta_p)
@@ -188,11 +195,11 @@ cat("Valor Real = ", theta, "\n")
 
 verosim_v = c()
 for (t in p_range) {
-  verosim = t^{n} * (1-t)^{sum(x)}
+  verosim = t^{n*r} * (1-t)^{sum(x)}
   verosim_v = append(verosim_v, verosim)
 }
 
-MV = n/(n + sum(x))
+MV = (n*r)/(sum(x)+(n*r))
 
 threshold = MV * exp(-qchisq(0.95, df = 1) / 2)
 

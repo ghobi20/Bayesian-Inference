@@ -6,7 +6,7 @@ output: html_document
 ---
 ---
 
-En este código se puede dar una densidad de posibles valores para un parámetro lambda desconocido en un intervalo de confianza a partir de alpha conocido por medio de inferencia Bayesiana
+En este código se puede dar una densidad de posibles valores para un parámetro lambda desconocido de una distribución Gamma en un intervalo de confianza a partir de alpha conocido por medio de inferencia Bayesiana
 
 **Input**:
 - alpha
