@@ -66,11 +66,11 @@ $$(\lambda|x_1, ..., x_n) =
 \lambda^{s}e^{-\lambda n}\lambda^{\alpha-1}e^{-\beta\lambda}
 $$
 
-$$(\lambda|x_1, ..., x_n) = \lambda^{s\alpha-1}e^{-\lambda n-\beta\lambda}
+$$(\lambda|x_1, ..., x_n) = \lambda^{s+\alpha-1}e^{-\lambda n-\beta\lambda}
 $$
 
 $$(\lambda|x_1, ..., x_n) = 
-\lambda^{\alpha^*-1}e^{-\lambda\beta^*}, \alpha^*=s\alpha,\space b^*=n+\beta
+\lambda^{\alpha^*-1}e^{-\lambda\beta^*}, \alpha^*=s+\alpha,\space b^*=n+\beta
 $$
 
 ## Estimación de MAP
@@ -119,8 +119,8 @@ x = rpois(n, lambda)
 ## A priori Gamma no informativa de lambda
 
 ```{r}
-alpha =1
-beta =1
+alpha =.0000001
+beta =.0000001
 p_range = seq(0, 10, .01)
 priori_l = dgamma(p_range, rate = beta, shape = alpha)
 plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "lambda", ylab = "f(lambda)", main = "Densidad a priori Gamma para lambda")
@@ -129,7 +129,7 @@ plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "lambda", ylab
 ## A posteriori Gamma de lambda
 
 ```{r}
-alpha_p = sum(x)*alpha
+alpha_p = sum(x) + alpha
 beta_p = n + beta
 
 post_l = dgamma(p_range, rate = beta_p, shape = alpha_p)
@@ -166,11 +166,11 @@ cat("Valor Real = ", lambda, "\n")
 
 verosim_v = c()
 for (l in p_range) {
-  verosim = l
+  verosim = (l^{sum(x)})*(exp(-l*n))
   verosim_v = append(verosim_v, verosim)
 }
 
-MV = (alpha*n)/sum(x) 
+MV = mean(x)
 
 threshold = MV * exp(-qchisq(0.95, df = 1) / 2)
 
