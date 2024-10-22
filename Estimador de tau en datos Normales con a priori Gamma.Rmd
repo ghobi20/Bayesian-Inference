@@ -1,0 +1,208 @@
+---
+title: "Estimador de tau en datos Normales con a priori Gamma"
+author: "Sofia Gamino Estrada"
+date: "October 19, 2024"
+output: html_document
+---
+---
+
+En este código se puede dar una densidad de posibles valores para un parámetro tau de precision desconocido de una distribución Normal en un intervalo de confianza a partir de un tamaño de muestra n conocido y media mu conocida por medio de inferencia Bayesiana
+
+**Input**:
+- tau: Para poder comparar el desempeño del modelo y definir los datos de prueba 
+- alpha: Parametro de forma a priori de Gamma
+- beta: Parámetro de tasa a priori de Gamma
+- p_range: Una secuencia de posibles valores para lambda. Se va a operar sobre esta
+- n: El tamaño de la muestra 
+- mu: La media de la distribución 
+**Output**: 
+- Distribución a priori
+- Distribución a posteriori
+- Estimadores a posteriori: MAP, Media, Mediana
+- Intervalo de credibilidad de lambda del 95%: Son los posibles valores de lambda
+- Distribución de Verosimilitud, así como MV y intervalo de confianza: Para comparación con el método Bayesiano
+
+---
+
+# Descripción del problema
+Sea $X$ una variable aleatoria Normal con media conocida $\mu$ y precisión $\tau$ desconocida, cuya función de densidad está dada por
+$$ f_{X|T}(x|\tau) = \sqrt{\frac{\tau}{2\pi}}\exp\left\{-\frac{\tau}{2} (x-\mu)^2 \right\}.
+$$
+Note que la precisión es igual a $\sigma^{-2}$, lo cual implica que, a mayor varianza, menor precisión, y a mayor precisión, menor varianza, puesto que uno es el inverso del otro. Encuentre la función de densidad a posteriori de $T$ a partir de una muestra de tamaño $n$, bajo el supuesto de que $T$ sigue una distribución a priori Gamma$(\alpha, \beta)$, donde $\alpha$ es parámetro de forma y $\beta$ es parámetro de tasa.
+
+# Distribución Conjugada
+
+## Hallar los kernel
+
+Primero tenemos que hallar el kernel de $f_{X|T} (x|\tau)$ y de $f_{T}(\tau)$
+
+### Kernel de $f_{X|T} (x|\tau)$
+
+$$f_{X|T} (x|\tau) = 
+\sqrt{\frac{\tau}{2\pi}}\exp\left\{-\frac{\tau}{2} (x-\mu)^2 \right\}
+$$
+$$f_{X|\Lambda} (x|\lambda) =
+(\frac{\tau}{2\pi})^{\frac{1}{2}}\exp\left\{-\frac{\tau}{2} (x-\mu)^2 \right\}
+$$
+
+$$L(\tau) = \prod^n_{i=1}(f_{X|\Lambda} (x|\lambda)) = 
+\prod^{n}_{i=1}(\frac{\tau}{2\pi})^{\frac{1}{2}}\exp\left\{-\frac{\tau}{2} (x-\mu)^2 \right\}
+$$
+
+$$L(\tau) = 
+(\frac{\tau}{2\pi})^{\frac{n}{2}}\exp\left\{-\frac{1}{2}\tau \sum^n_{i=1}(x_i-\mu)^2 \right\}
+$$
+
+$$L(\tau) =
+\tau^{\frac{n}{2}}\exp\left\{-\frac{\tau }{2}\sum^n_{i=1}(x_i-\mu)^2 \right\}
+$$
+
+
+### Kernel de $f_{T}(\tau)$
+
+$$f_{T}(\tau) = \frac{\beta ^ \alpha}{\Gamma(\alpha)} \tau^{\alpha-1} e^{-\beta\}
+$$
+$$f_{T}(\tau) \propto \tau^{\alpha-1}e^{-\beta\tau}
+$$
+
+## Distribución Conjugada a posteriori
+Ya que tenemos los kernel, podemos sacar la distribución conjugada a posteriori. En este caso, ignoraremos la constante de normalización $\int¹_{0}L(\tau)f_{T}(\tau)d\tau$ en el denominador.
+
+$$(\tau|x_1, ..., x_n) = L(\tau)f_{T}(\tau)
+$$
+
+$$(\tau|x_1, ..., x_n) = 
+\tau^{\alpha-1}e^{-\beta\tau}\tau^{\frac{n}{2}}\exp\left\{-\frac{\tau }{2}\sum^n_{i=1}(x_i-\mu)^2 \right\}
+$$
+
+$$(\tau|x_1, ..., x_n) = \tau^{\alpha-1+\frac{n}{2}}\exp\left\{-\frac{\tau }{2}\sum^n_{i=1}(x_i-\mu)^2-\beta\tau \right\}
+$$
+
+$$(\tau|x_1, ..., x_n) = \tau^{\alpha-1+\frac{1}{2}}\exp\left\{-\tau(\frac{1}{2}\sum^n_{i=1}(x_i-\mu)^2-\beta) \right\}
+$$
+
+$$(\tau|x_1, ..., x_n) = 
+\tau^{\alpha^*-1}e^{-\tau\beta^*}, \alpha^*=\alpha+\frac{n}{2},\space b^*=\frac{1}{2}\sum^n_{i=1}(x_i-\mu)^2-\beta
+$$
+
+## Estimación de MAP
+
+Podemos hallar MAP de lambda a partir de encontrar cuando la distribución conjugada es 0. Se hace ln(L($\tau$)), después se deriva $\lambda$ y finalmente igualamos a 0.
+
+$$l(\tau) = ln[\tau^{\alpha^*-1}e^{-\tau\beta^*}]
+$$
+
+$$l(\tau) = ln(\tau^{\alpha^{*}-1})+ln(e^{-\tau\beta^*})
+$$
+
+$$l(\tau) = (\alpha^{*}-1)ln(\tau)-\tau\beta^*
+$$
+
+$$\frac{\partial l(\tau)}{\partial \tau} = \frac{\partial}{\partial\tau}[(\alpha^{*}-1)ln(\tau)-\tau\beta^*]
+$$
+
+$$ = \frac{\alpha^{*}-1}{\tau}-\beta^{*}
+$$
+
+$$ \frac{\alpha^{*}-1}{\tau}-\beta^{*} = 0
+$$ 
+
+$$\alpha^{*}-1 = \beta^{*}\tau
+$$
+
+$$\tau^{-}_{MAP} =\frac{\alpha^{*}-1}{\beta^{*}}
+$$
+
+# Código de estimador bayesiano
+
+## Creación de datos de prueba
+Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor real de $\tau$ a partir de una distribución Poisson.
+
+```{r}
+rm(list = ls())
+tau = 7
+mu = 5
+n = 30
+set.seed(1010)
+x = rnorm(n, mean = mu, sd = 1/sqrt(tau))
+
+```
+
+
+## A priori Gamma no informativa de lambda
+
+```{r}
+alpha =1
+beta =1
+p_range = seq(0, 10, .01)
+priori_l = dgamma(p_range, rate = beta, shape = alpha)
+plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "tau", ylab = "f(tau)", main = "Densidad a priori Gamma para tau")
+```
+
+## A posteriori Gamma de lambda
+
+```{r}
+
+suma_cuadrados = sum((x - mu)^2)  # Suma de los cuadrados de las diferencias
+
+alpha_p = alpha + (n/2)
+beta_p = suma_cuadrados-beta
+
+post_l = dgamma(p_range, rate = beta_p, shape = alpha_p)
+
+plot(p_range, post_l, col="dodgerblue", type ="l", lwd = 2, xlab = "tau", ylab = "f(tau)", main = "Densidad a Posteriori vs a Priori")
+lines(p_range, priori_l, col="magenta", type ="l", lwd = 2)
+
+IC_cred = qgamma(c(0.025, 0.975), shape = alpha_p, rate = beta_p)
+
+MAP = (alpha_p-1)/beta_p
+Mean = alpha_p/beta_p
+Median = qgamma(0.5, shape = alpha_p, rate = beta_p)
+
+abline(v = MAP, lwd = 2, col = "darkmagenta", lty = 4)
+abline(v = Mean, lwd = 2, col = "blue4", lty = 4)
+abline(v = Median, lwd = 2, col = "green", lty = 4)
+abline(v = IC_cred[1], lwd = 2, col = "red", lty = 5)
+abline(v = IC_cred[2], lwd = 2, col = "red", lty = 6)
+abline(v = tau, lwd = 2, col = "black", lty = 1)
+legend("topright", c("MAP", "Mean", "Median", "IC_cred_lower", "IC_cred_upper", "Real value"), lty = c(4, 4, 4, 5, 6, 1), col = c("darkmagenta", "blue4", "green", "red", "red", "black"))
+
+
+cat("MAP = ", MAP, "\n")
+cat("Mean = ", Mean, "\n")
+cat("Median = ", Median, "\n")
+cat("Intervalo de credibilidad = ", IC_cred, "\n")
+cat("Valor Real = ", tau, "\n")
+
+```
+
+## Función de Verosimilitud
+
+```{r}
+
+verosim_v = c()
+suma_cuadrados = sum((x - mu)^2)  # Suma de los cuadrados de las diferencias
+
+for (t in p_range) {
+  verosim = (t / (2 * pi))^(n / 2) * exp(-t * suma_cuadrados / 2)
+  verosim_v = append(verosim_v, verosim)
+}
+
+MV = n/suma_cuadrados
+
+threshold = MV * exp(-qchisq(0.95, df = 1) / 2)
+
+IC_lower = min(p_range[verosim_v >= threshold])
+IC_upper = max(p_range[verosim_v >= threshold])
+
+plot(p_range, verosim_v, col="purple", type ="l", lwd = 2, xlab = "lambda", ylab = "L(lambda)", main = "Gráfica de verosimilitud")
+abline(v = MV, lwd = 2, col = "gold", lty = 4)
+abline(v = IC_lower , lwd = 2, col = "blue4", lty = 4)
+abline(v = IC_upper, lwd = 2, col = "blue4", lty = 4)
+abline(v = tau, lwd = 2, col = "black", lty = 1)
+legend("topright", c("MV", "Int_conf", "Valor Real"), lty = c(4, 4, 1), col = c("gold", "blue4", "black"))
+
+
+cat("MV = ", MV, "\n")
+cat("Confidence Interval = ", IC_lower, ",", IC_upper)
+```
