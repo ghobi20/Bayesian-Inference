@@ -1,0 +1,212 @@
+---
+title: "Estimador de theta en datos Geometricos con a priori Beta"
+author: "Sofia Gamino Estrada"
+date: "October 19, 2024"
+output: html_document
+---
+---
+
+En este código se puede dar una densidad de posibles valores para un parámetro lambda desconocido en un intervalo de confianza a partir de alpha conocido por medio de inferencia Bayesiana
+
+**Input**:
+- n: Tamaño de la muestra
+- theta: Para poder comparar el desempeño del modelo y definir los datos de prueba 
+- alpha: Uno de los parámetros de la distribución beta
+- beta: El otro parámetro de la distribución beta
+
+**Output**: 
+- Distribución a priori
+- Distribución a posteriori
+- Estimadores a posteriori: MAP, Media, Mediana
+- Intervalo de credibilidad de lambda del 95%: Son los posibles valores de lambda
+- Distribución de Verosimilitud, así como MV y intervalo de confianza(no sale): Para comparación con el método Bayesiano
+
+---
+
+# Descripción del problema
+2. Suponga que se tiene una muestra aleatoria de tamaño $n$ de una variable aleatoria Geométrica$(\theta)$. Encuentre la distribución posterior de $\Theta$ considerando que, a priori, $\Theta$ sigue una distribución Beta$(a, b)$. Recuerde que la variable $X$ cuenta el número de fallas hasta el primer éxito, por lo que la función de probabilidad es:
+$$ f_{X|\Theta}(x|\theta) = \begin{cases}
+\theta(1-\theta)^x, & x=0,1,2,...;\\
+0 & \text{otro caso}.
+\end{cases}
+$$
+
+Distribución beta a priori
+$$f_{\Theta}(\theta) = \begin{cases}
+\frac{ 1}{B(\alpha,\beta)} x^{\alpha-1} (1-x)^{\beta-1}, & x>0;\\
+0, & \text{otro caso}.
+\end{cases}
+$$
+
+# Distribución Conjugada
+
+## Hallar los kernel
+
+Primero tenemos que hallar el kernel de $f_{X|\Theta} (x|\theta)$ y de $f_{\theta}(\theta)$
+
+### Kernel de $f_{X|\Theta} (x|\theta)$
+
+$$f_{X|\Theta} (x|\theta) = 
+\theta(1-\theta)^x
+$$
+
+$$L(\theta) = \prod^n_{i=1}(f_{X|\Theta} (x|\theta)) = \prod^n_{i=1}\theta(1-\theta)^x
+$$
+
+$$L(\theta) = \theta^n(1-\theta)^{s}, s = \sum^n_{i=1}x_i
+$$
+
+### Kernel de $f_{\Lambda}(\lambda)$
+
+$$f_{\Theta}(\theta) = 
+\frac{ 1}{B(\alpha,\beta)} \theta^{\alpha-1} (1-\theta)^{\beta-1}
+$$
+
+$$f_{\Theta}(\theta) \propto \theta^{\alpha-1} (1-\theta)^{\beta-1}
+$$
+
+## Distribución Conjugada a posteriori
+Ya que tenemos los kernel, podemos sacar la distribución conjugada a posteriori. En este caso, ignoraremos la constante de normalización $\int¹_{0}L(\theta)f_{\Theta}(\theta)d\theta$ en el denominador.
+
+$$(\theta|x_1, ..., x_n) = 
+L(\theta)f_{\Theta}(\theta)
+$$
+
+$$(\theta|x_1, ..., x_n) = 
+\theta^n(1-\theta)^{s}\theta^{\alpha-1} (1-\theta)^{\beta-1}
+$$
+
+$$(\theta|x_1, ..., x_n) = 
+\theta^{n+\alpha-1}(1-\theta)^{s+\beta-1}\ 
+$$
+
+$$(\theta|x_1, ..., x_n) = 
+\theta^{a^*-1}(1-\theta)^{\beta^*-1}, \space \alpha^*=n+\alpha, \space \beta^* = s+\beta
+$$
+
+## Estimación de MAP
+
+Podemos hallar MAP de theta a partir de encontrar cuando la distribución conjugada es 0. Se hace ln(L($\theta$)), después se deriva $\theta$ y finalmente igualamos a 0.
+
+$$l(\theta) = 
+ln[\theta^{\alpha^*-1}(1-\theta)^{\beta^*-1}]
+$$
+$$l(\theta)=
+ln(\theta^{\alpha^*-1})+ln((1-\theta)^{\beta^*-1})
+$$
+
+$$l(\theta) = 
+(\alpha^*-1)ln(\theta)-(\beta^*-1)ln(1-\theta)
+$$
+
+$$\frac{\partial l(\theta)}{\partial \theta} = \frac{\partial}{\partial\theta}[(\alpha^*-1)ln(\theta)-(\beta^*-1)ln(1-\theta)]
+$$
+
+$$ = 
+\frac{\alpha^*-1}{\theta}-\frac{\beta^*-1}{1-\theta}
+$$
+
+$$ = 
+\frac{\alpha^*-1(1-\theta)-\theta(\beta^*-1)}{\theta(1-\theta)}
+$$
+$$\frac{\alpha^*-\alpha^*\theta-1+\theta-\beta^*\theta+\theta}{\theta(1-\theta)}=0
+$$
+$$-\alpha^*\theta-\beta^*\theta+2\theta+\alpha^*-1=0 
+$$
+
+$$\theta(-\alpha^*-\beta+2)+\alpha^*-1=0
+$$
+
+$$\theta(-\alpha^*-\beta+2) = 1-\alpha^*
+$$
+
+$$\theta^{-}_{MAP} = \frac{1-\alpha^*}{-\alpha^*-\beta^*+2}
+$$
+
+# Código de estimador bayesiano
+
+## Creación de datos de prueba
+Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor real de $\theta$ a partir de una distribución Geometrica.
+
+```{r}
+rm(list = ls())
+theta = .76
+n = 20
+set.seed(1010)
+x = rgeom(n, theta)
+
+```
+
+
+## A priori Beta no informativa de theta
+
+```{r}
+alpha = 1
+beta = 1
+p_range = seq(0, 1, .001)
+priori_t = dbeta(p_range, alpha, beta)
+plot(p_range, priori_t, col="magenta", type ="l", lwd = 2, xlab = "theta", ylab = "f(theta)", main = "Densidad a priori Beta para theta")
+```
+
+## A posteriori Beta de lambda
+
+```{r}
+alpha_p = n + alpha
+beta_p = sum(x) + beta
+
+post_t = dbeta(p_range, alpha_p, beta_p)
+
+plot(p_range, post_t, col="dodgerblue", type ="l", lwd = 2, xlab = "theta", ylab = "f(theta)", main = "Densidad a Posteriori vs a Priori")
+lines(p_range, priori_t, col="magenta", type ="l", lwd = 2)
+
+IC_cred = qbeta(c(0.025, 0.975), alpha_p, beta_p)
+
+MAP = (1 - alpha_p)/(-alpha_p-beta_p+2)
+Mean = alpha_p/(alpha_p + beta_p)
+Median = qbeta(0.5, alpha_p, beta_p)
+
+abline(v = MAP, lwd = 2, col = "yellow", lty = 4)
+abline(v = Mean, lwd = 2, col = "blue4", lty = 4)
+abline(v = Median, lwd = 2, col = "green", lty = 4)
+abline(v = IC_cred[1], lwd = 2, col = "red", lty = 5)
+abline(v = IC_cred[2], lwd = 2, col = "red", lty = 6)
+abline(v = theta, lwd = 2, col = "black", lty = 1)
+legend("topright", c("MAP", "Mean", "Median", "IC_cred_lower", "IC_cred_upper", "Real value"), lty = c(4, 4, 4, 5, 6, 1), col = c("yellow", "blue4", "green", "red", "red", "black"))
+
+
+cat("MAP = ", MAP, "\n")
+cat("Mean = ", Mean, "\n")
+cat("Median = ", Median, "\n")
+cat("Intervalo de credibilidad = ", IC_cred, "\n")
+cat("Valor Real = ", theta, "\n")
+
+```
+
+## Función de Verosimilitud
+
+```{r}
+
+verosim_v = c()
+for (t in p_range) {
+  verosim = t^{n} * (1-t)^{sum(x)}
+  verosim_v = append(verosim_v, verosim)
+}
+
+MV = n/(n + sum(x))
+
+threshold = MV * exp(-qchisq(0.95, df = 1) / 2)
+
+IC_lower = min(p_range[verosim_v >= threshold])
+IC_upper = max(p_range[verosim_v >= threshold])
+
+plot(p_range, verosim_v, col="purple", type ="l", lwd = 2, xlab = "theta", ylab = "L(theta)", main = "Gráfica de verosimilitud")
+abline(v = MV, lwd = 2, col = "gold", lty = 4)
+abline(v = IC_lower , lwd = 2, col = "blue4", lty = 4)
+abline(v = IC_upper, lwd = 2, col = "blue4", lty = 4)
+abline(v = theta, lwd = 2, col = "black", lty = 1)
+legend("topright", c("MV", "Int_conf", "Valor Real"), lty = c(4, 4, 1), col = c("gold", "blue4", "black"))
+
+
+cat("MV = ", MV, "\n")
+cat("Confidence Interval = ", IC_lower, ",", IC_upper)
+```

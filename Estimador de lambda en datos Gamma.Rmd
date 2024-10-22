@@ -14,7 +14,7 @@ En este código se puede dar una densidad de posibles valores para un parámetro
 - a: Parametro de forma a priori
 - b: Parámetro de tasa a priori
 - p_range: Una secuencia de posibles valores para lambda. Se va a operar sobre esta
-
+- n: El tamaño de la muestra 
 **Output**: 
 - Distribución a priori
 - Distribución a posteriori
@@ -175,7 +175,7 @@ for (l in p_range) {
   verosim_v = append(verosim_v, verosim)
 }
 
-MV = (alpha*n)/sum(x)
+MV = (alpha*n)/sum(x) 
 
 threshold = MV * exp(-qchisq(0.95, df = 1) / 2)
 
