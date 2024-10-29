@@ -120,11 +120,12 @@ Esto nos va a poder ayudar a comparar nuestro estimador bayesiano con el valor r
 
 ```{r}
 rm(list = ls())
+library(LaplacesDemon)
 tau = 7
 mu = 5
 n = 30
 set.seed(1010)
-x = rnorm(n, mean = mu, sd = 1/sqrt(tau))
+x = rnormp(n, mean = mu, prec = tau)
 
 ```
 
@@ -132,8 +133,8 @@ x = rnorm(n, mean = mu, sd = 1/sqrt(tau))
 ## A priori Gamma no informativa de lambda
 
 ```{r}
-alpha =1
-beta =1
+alpha =0.01
+beta =0.01
 p_range = seq(0, 10, .01)
 priori_l = dgamma(p_range, rate = beta, shape = alpha)
 plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "tau", ylab = "f(tau)", main = "Densidad a priori Gamma para tau")
@@ -146,7 +147,7 @@ plot(p_range, priori_l, col="magenta", type ="l", lwd = 2, xlab = "tau", ylab = 
 suma_cuadrados = sum((x - mu)^2)  # Suma de los cuadrados de las diferencias
 
 alpha_p = alpha + (n/2)
-beta_p = suma_cuadrados-beta
+beta_p = beta + suma_cuadrados/2
 
 post_l = dgamma(p_range, rate = beta_p, shape = alpha_p)
 
